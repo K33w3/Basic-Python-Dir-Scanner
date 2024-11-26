@@ -1,10 +1,46 @@
-#!/usr/bin/env python
-import requests,time
-import sys, argparse
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+import sys
+import time
+import requests
+
+BOLD = "\033[1m"
+END = "\033[0m"
 
 
-def main(argv):
-	print("""
+def scan_urls(wordlist, url):
+    with open(wordlist, "r") as file:
+        content = file.read().splitlines()
+
+        for line in content:
+            start = time.time()
+            x = f"{url}/{line}"
+            y = requests.get(x)
+            end = time.time()
+
+            if y.status_code != 404:
+                status_message = f"{BOLD}{x} [ Status: {y.status_code} | Size: {len(y.text)} | Duration: {end - start:.2f} s ]{END}"
+            else:
+                status_message = f"{x} [ Status: {y.status_code} | Size: {len(y.text)} | Duration: {end - start:.2f} s ]"
+
+            print(status_message)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: fuzzerweb_better.py <wordlist> <URL>")
+        sys.exit()
+
+    try:
+        wordlist = sys.argv[1]
+        url = sys.argv[2].rstrip("/")
+    except IndexError:
+        print("Please ensure all arguments are correctly specified.")
+        sys.exit()
+
+    print(
+        """
  _______  __   __  _______  _______  _______  ______   
 |  _    ||  | |  ||       ||       ||       ||    _ |  
 | |_|   ||  | |  ||____   ||____   ||    ___||   | ||  
@@ -12,64 +48,15 @@ def main(argv):
 |  _   | |       || ______|| ______||    ___||    __  |
 | |_|   ||       || |_____ | |_____ |   |___ |   |  | |
 |_______||_______||_______||_______||_______||___|  |_|
-		""")
+        """
+    )
 
-	print("wordlist: ",args.wordlist)
-	print("url: ",args.url)
-	print("---------------------------------------")
+    print(f"Wordlist: {wordlist}")
+    print(f"Url: {url}")
+    print("------" * 4)
 
-	f = open(args.wordlist, 'r')
-	f1 = f.read().splitlines()
-	for line in f1:
-		start = time.time()
-		x = args.url.replace("BUZZ", line)
-		y = requests.get(x)
-
-		if(args.verb == True):
-			if(y.status_code != 404):
-				end = time.time()
-				print(style.BOLD + x,"[", "Status: ",y.status_code, "Size: ", len(y.text), "Duration: ", end-start,"s","]"+style.END)
-			else:
-				end = time.time()
-				print(x,"[", "Status: ",y.status_code, "Size: ", len(y.text), "Duration: ", end-start,"s","]")
-
-		elif(y.status_code != 404):
-			end = time.time()
-			print(style.BOLD + x,"[", "Status: ",y.status_code, "Size: ", len(y.text), "Duration: ", end-start,"s","]"+style.END)
+    scan_urls(wordlist, url)
 
 
 if __name__ == "__main__":
-	
-	class style:
-		BOLD = '\033[1m'
-		END = '\033[0m'
-		Yellow = ''
-
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-w', '--wordlist',
-						default='0',
-						dest='wordlist',
-						help='Provide wordlist for fuzzing',
-						required = True,
-						type=str
-						)
-	parser.add_argument('-u', '--url',
-						default='0',
-						dest='url',
-						help='Provide url to fuzz',
-						required=True,
-						type=str)
-	parser.add_argument('-v', '--verbose',
-						default='false',
-						dest='verb',
-						help='Give this argument if you want it to be a verbose output',
-						action='store_true')
-	#parser.add_argument('-b', '--buzz',
-	#					default='0',
-	#					dest='buzz',
-	#					help='Provide url with keyword BUZZ to fuzz location',
-	#					type=str)
-
-	args = parser.parse_args()
-	
-	main(sys.argv[1:])
+    main()
